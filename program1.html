@@ -1,172 +1,96 @@
-<!-- programs/program1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/style.css">
-    <title>Transpose</title>
+
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
         pre {
             background-color: #f4f4f4;
-            padding: 15px;
-            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px;
             overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <h1>duplex</h1>
-    
-    
+    <h1>WEEK1</h1>
     <pre>
         <code>
-            #include "ns3/applications-module.h"
-            #include "ns3/core-module.h"
-            #include "ns3/flow-monitor-module.h"
-            #include "ns3/internet-module.h"
-            #include "ns3/network-module.h"
-            #include "ns3/point-to-point-module.h"
-            #include "ns3/traffic-control-module.h"
-            
-            using namespace ns3;
-            
-            NS_LOG_COMPONENT_DEFINE("TrafficControlExample");
-            int
-            main(int argc, char* argv[])
-            {
-                double simulationTime = 10; // seconds
-                std::string transportProt = "Udp";
-                std::string socketType;
-            
-                CommandLine cmd(_FILE_);
-                cmd.AddValue("transportProt", "Transport protocol to use: Tcp, Udp", transportProt);
-                cmd.Parse(argc, argv);
-            
-                if (transportProt == "Tcp")
-                {
-                    socketType = "ns3::TcpSocketFactory";
-                }
-                else
-                {
-                    socketType = "ns3::UdpSocketFactory";
-                }
-            
-                NodeContainer nodes;
-                nodes.Create(3);
-            
-                PointToPointHelper pointToPoint;
-                pointToPoint.SetDeviceAttribute("DataRate", StringValue("10Mbps"));
-                pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
-                pointToPoint.SetQueue("ns3::DropTailQueue", "MaxSize", StringValue("1p"));
-            
-                NetDeviceContainer devices01;
-                devices01 = pointToPoint.Install(nodes.Get(0),nodes.Get(1));
-                NetDeviceContainer devices12;
-                devices12 = pointToPoint.Install(nodes.Get(1),nodes.Get(2));
-            
-            
-                InternetStackHelper stack;
-                stack.Install(nodes);
-            
-            
-                Ipv4AddressHelper address01;
-                address01.SetBase("10.1.1.0", "255.255.255.0");
-                Ipv4InterfaceContainer interfaces01 = address01.Assign(devices01);
-                Ipv4AddressHelper address12;
-                address12.SetBase("10.1.2.0", "255.255.255.0");
-                Ipv4InterfaceContainer interfaces12 = address12.Assign(devices12);
-                Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-            
-                // Flow
-                uint16_t port = 7;
-                Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
-                PacketSinkHelper packetSinkHelper(socketType, localAddress);
-                ApplicationContainer sinkApp = packetSinkHelper.Install(nodes.Get(2));
-            
-                sinkApp.Start(Seconds(0.0));
-                sinkApp.Stop(Seconds(simulationTime + 0.1));
-            
-                uint32_t payloadSize = 1448;
-                Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(payloadSize));
-            
-                OnOffHelper onoff(socketType, Ipv4Address::GetAny());
-                onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
-                onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-                onoff.SetAttribute("PacketSize", UintegerValue(payloadSize));
-                onoff.SetAttribute("DataRate", StringValue("50Mbps")); // bit/s
-                ApplicationContainer apps;
-            
-                InetSocketAddress rmt(interfaces12.GetAddress(1), port);
-                rmt.SetTos(0xb8);
-                AddressValue remoteAddress(rmt);
-                onoff.SetAttribute("Remote", remoteAddress);
-                apps.Add(onoff.Install(nodes.Get(0)));
-                apps.Start(Seconds(1.0));
-                apps.Stop(Seconds(simulationTime + 0.1));
-            
-                FlowMonitorHelper flowmon;
-                Ptr<FlowMonitor> monitor = flowmon.InstallAll();
-            
-                Simulator::Stop(Seconds(simulationTime + 5));
-                Simulator::Run();
-            
-                Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier>(flowmon.GetClassifier());
-                std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
-                std::cout << std::endl << "*** Flow monitor statistics ***" << std::endl;
-                std::cout << "  Tx Packets/Bytes:   " << stats[1].txPackets << " / " << stats[1].txBytes
-                          << std::endl;
-                std::cout << "  Offered Load: "
-                          << stats[1].txBytes * 8.0 /
-                                 (stats[1].timeLastTxPacket.GetSeconds() -
-                                  stats[1].timeFirstTxPacket.GetSeconds()) /
-                                 1000000
-                          << " Mbps" << std::endl;
-                std::cout << "  Rx Packets/Bytes:   " << stats[1].rxPackets << " / " << stats[1].rxBytes
-                          << std::endl;
-                uint32_t packetsDroppedByQueueDisc = 0;
-                uint64_t bytesDroppedByQueueDisc = 0;
-                if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE_DISC)
-                {
-                    packetsDroppedByQueueDisc = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-                    bytesDroppedByQueueDisc = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-                }
-                std::cout << "  Packets/Bytes Dropped by Queue Disc:   " << packetsDroppedByQueueDisc << " / "
-                          << bytesDroppedByQueueDisc << std::endl;
-                uint32_t packetsDroppedByNetDevice = 0;
-                uint64_t bytesDroppedByNetDevice = 0;
-                if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE)
-                {
-                    packetsDroppedByNetDevice = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE];
-                    bytesDroppedByNetDevice = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE];
-                }
-                std::cout << "  Packets/Bytes Dropped by NetDevice:   " << packetsDroppedByNetDevice << " / "
-                          << bytesDroppedByNetDevice << std::endl;
-                std::cout << "  Throughput: "
-                          << stats[1].rxBytes * 8.0 /
-                                 (stats[1].timeLastRxPacket.GetSeconds() -
-                                  stats[1].timeFirstRxPacket.GetSeconds()) /
-                                 1000000
-                          << " Mbps" << std::endl;
-                std::cout << "  Mean delay:   " << stats[1].delaySum.GetSeconds() / stats[1].rxPackets
-                          << std::endl;
-                std::cout << "  Mean jitter:   " << stats[1].jitterSum.GetSeconds() / (stats[1].rxPackets - 1)
-                          << std::endl;
-                auto dscpVec = classifier->GetDscpCounts(1);
-                for (auto p : dscpVec)
-                {
-                    std::cout << "  DSCP value:   0x" << std::hex << static_cast<uint32_t>(p.first) << std::dec
-                              << "  count:   " << p.second << std::endl;
-                }
-            
-                Simulator::Destroy();
-            
-                return 0;
-            }
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
 
+public class StudentDatabaseExample {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/mydatabase";
+        String user = "root";
+        String password = "";
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS Student (" +
+                "USN VARCHAR(10) PRIMARY KEY," +
+                "Name VARCHAR(100)," +
+                "Semester INT," +
+                "CGPA DECIMAL(3, 2))";
+        String insertDataSQL1 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS001', 'Alice', 5, 8.5)";
+        String insertDataSQL2 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS002', 'Bob', 4, 7.5)";
+        String insertDataSQL3 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS003', 'Charlie', 5, 9.0)";
+        String insertDataSQL4 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS004', 'David', 6, 6.8)";
+        String insertDataSQL5 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS005', 'Eve', 5, 7.9)";
+        String displayAllStudentsSQL = "SELECT * FROM Student";
+        String display5thSemesterStudentsSQL = "SELECT * FROM Student WHERE Semester = 5";
+        String display5thSemesterAbove8SQL = "SELECT * FROM Student WHERE Semester = 5 AND CGPA > 8.0";
+        String countAbove8SQL = "SELECT COUNT(*) FROM Student WHERE CGPA > 8.0";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(createTableSQL);
+            stmt.executeUpdate(insertDataSQL1);
+            stmt.executeUpdate(insertDataSQL2);
+            stmt.executeUpdate(insertDataSQL3);
+            stmt.executeUpdate(insertDataSQL4);
+            stmt.executeUpdate(insertDataSQL5);
+
+            ResultSet rs = stmt.executeQuery(displayAllStudentsSQL);
+            displayResults(rs);
+
+            rs = stmt.executeQuery(display5thSemesterStudentsSQL);
+            displayResults(rs);
+
+            rs = stmt.executeQuery(display5thSemesterAbove8SQL);
+            displayResults(rs);
+
+            rs = stmt.executeQuery(countAbove8SQL);
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("Total number of students with CGPA above 8.0: " + count);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void displayResults(ResultSet rs) throws SQLException {
+        System.out.println("USN\t\tName\t\tSemester\tCGPA");
+        System.out.println("-----------------------------------------------");
+        while (rs.next()) {
+            String usn = rs.getString("USN");
+            String name = rs.getString("Name");
+            int semester = rs.getInt("Semester");
+            double cgpa = rs.getDouble("CGPA");
+            System.out.printf("%s\t%-15s\t%d\t\t%.2f%n", usn, name, semester, cgpa);
+        }
+    }
+}
         </code>
     </pre>
-
-    <script src="../js/script.js"></script>
 </body>
 </html>
