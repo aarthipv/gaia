@@ -1,284 +1,248 @@
-<!-- programs/program1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/style.css">
-    <title>Transpose</title>
+    <title>Prog1 and Prog2 - SQL Operations</title>
     <style>
-        pre {
+        body {
+            font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            padding: 15px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        pre {
+            background-color: #2e2e2e;
+            color: #fff;
+            padding: 20px;
             border-radius: 5px;
-            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <h1>infrastructure</h1>
-    
-    
-    <pre>
-        <code>
-            #include "ns3/command-line.h"
-            #include "ns3/config.h"
-            #include "ns3/double.h"
-            #include "ns3/internet-stack-helper.h"
-            #include "ns3/ipv4-address-helper.h"
-            #include "ns3/log.h"
-            #include "ns3/mobility-helper.h"
-            #include "ns3/mobility-model.h"
-            #include "ns3/string.h"
-            #include "ns3/yans-wifi-channel.h"
-            #include "ns3/yans-wifi-helper.h"
-            #include "ns3/applications-module.h"
-            #include "ns3/core-module.h"
-            #include "ns3/flow-monitor-module.h"
-            #include "ns3/internet-module.h"
-            #include "ns3/network-module.h"
-            #include "ns3/point-to-point-module.h"
-            #include "ns3/traffic-control-module.h"
-            using namespace ns3;
+    <h1>Java Code for SQL Operations</h1>
+
+    <section>
+        <h2>Prog1</h2>
+        <pre>
             
-            NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
-            
-            /**
-             * Function called when a packet is received.
-             *
-             * \param socket The receiving socket.
-             */
-            void
-            ReceivePacket(Ptr<Socket> socket)
-            {
-                while (socket->Recv())
-                {
-                    NS_LOG_UNCOND("Received one packet!");
-                }
-            }
-            
-            /**
-             * Generate traffic.
-             *
-             * \param socket The sending socket.
-             * \param pktSize The packet size.
-             * \param pktCount The packet count.
-             * \param pktInterval The interval between two packets.
-             */
-            static void
-            GenerateTraffic(Ptr<Socket> socket, uint32_t pktSize, uint32_t pktCount, Time pktInterval)
-            {
-                if (pktCount > 0)
-                {
-                    socket->Send(Create<Packet>(pktSize));
-                    Simulator::Schedule(pktInterval,
-                                        &GenerateTraffic,
-                                        socket,
-                                        pktSize,
-                                        pktCount - 1,
-                                        pktInterval);
-                }
-                else
-                {
-                    socket->Close();
-                }
-            }
-            
-            int
-            main(int argc, char* argv[])
-            {	double simulationTime = 10; 
-                std::string phyMode("DsssRate1Mbps");
-                double rss = -80;           // -dBm
-                uint32_t packetSize = 1000; // bytes
-                uint32_t numPackets = 1;
-                double interval = 1.0; // seconds
-                bool verbose = false;
-            
-                CommandLine cmd(_FILE_);
-                cmd.AddValue("phyMode", "Wifi Phy mode", phyMode);
-                cmd.AddValue("rss", "received signal strength", rss);
-                cmd.AddValue("packetSize", "size of application packet sent", packetSize);
-                cmd.AddValue("numPackets", "number of packets generated", numPackets);
-                cmd.AddValue("interval", "interval (seconds) between packets", interval);
-                cmd.AddValue("verbose", "turn on all WifiNetDevice log components", verbose);
-                cmd.Parse(argc, argv);
-                // Convert to time object
-                Time interPacketInterval = Seconds(interval);
-            
-                // Fix non-unicast data rate to be the same as that of unicast
-                Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode", StringValue(phyMode));
-            
-                NodeContainer c;
-                c.Create(4);
-            
-                // The below set of helpers will help us to put together the wifi NICs we want
-                WifiHelper wifi;
-                if (verbose)
-                {
-                    WifiHelper::EnableLogComponents(); // Turn on all Wifi logging
-                }
-                wifi.SetStandard(WIFI_STANDARD_80211b);
-            
-                YansWifiPhyHelper wifiPhy;
-                // This is one parameter that matters when using FixedRssLossModel
-                // set it to zero; otherwise, gain will be added
-                wifiPhy.Set("RxGain", DoubleValue(0));
-                // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
-                wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
-            
-                YansWifiChannelHelper wifiChannel;
-                wifiChannel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
-                // The below FixedRssLossModel will cause the rss to be fixed regardless
-                // of the distance between the two stations, and the transmit power
-                wifiChannel.AddPropagationLoss("ns3::FixedRssLossModel", "Rss", DoubleValue(rss));
-                wifiPhy.SetChannel(wifiChannel.Create());
-            
-                // Add a mac and disable rate control
-                WifiMacHelper wifiMac;
-                wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager",
-                                             "DataMode",
-                                             StringValue(phyMode),
-                                             "ControlMode",
-                                             StringValue(phyMode));
-                // Set it to adhoc mode
-                wifiMac.SetType("ns3::AdhocWifiMac");
-                NetDeviceContainer devices = wifi.Install(wifiPhy, wifiMac, c);
-            
-                // Note that with FixedRssLossModel, the positions below are not
-                // used for received signal strength.
-                MobilityHelper mobility;
-                Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-                positionAlloc->Add(Vector(0.0, 0.0, 0.0));
-                positionAlloc->Add(Vector(5.0, 0.0, 0.0));
-                positionAlloc->Add(Vector(0.0, 5.0, 0.0));
-                positionAlloc->Add(Vector(5.0, 5.0, 0.0));
-                mobility.SetPositionAllocator(positionAlloc);
-                mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-                mobility.Install(c);
-            
-                InternetStackHelper internet;
-                internet.Install(c);
-            
-                Ipv4AddressHelper ipv4;
-                NS_LOG_INFO("Assign IP Addresses.");
-                ipv4.SetBase("10.1.1.0", "255.255.255.0");
-                Ipv4InterfaceContainer i = ipv4.Assign(devices);
-                    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-                // Flow
-                uint16_t port = 7;
-                Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
-                PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory", localAddress);
-                ApplicationContainer sinkApp = packetSinkHelper.Install(c.Get(2));
-            
-                sinkApp.Start(Seconds(0.0));
-                sinkApp.Stop(Seconds(simulationTime + 0.1));
-            
-                uint32_t payloadSize = 1448;
-                Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(payloadSize));
-            
-                OnOffHelper onoff("ns3::UdpSocketFactory", Ipv4Address::GetAny());
-                onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
-                onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-                onoff.SetAttribute("PacketSize", UintegerValue(payloadSize));
-                onoff.SetAttribute("DataRate", StringValue("50Mbps")); // bit/s
-                ApplicationContainer apps;
-            
-                InetSocketAddress rmt(i.GetAddress(1), port);
-                rmt.SetTos(0xb8);
-                AddressValue remoteAddress(rmt);
-                onoff.SetAttribute("Remote", remoteAddress);
-                apps.Add(onoff.Install(c.Get(0)));
-                apps.Start(Seconds(1.0));
-                apps.Stop(Seconds(simulationTime + 0.1));
-            
-                FlowMonitorHelper flowmon;
-                Ptr<FlowMonitor> monitor = flowmon.InstallAll();
-            
-                Simulator::Stop(Seconds(simulationTime + 5));
-                Simulator::Run();
-            
-                Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier>(flowmon.GetClassifier());
-                std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
-                std::cout << std::endl << "*** Flow monitor statistics ***" << std::endl;
-                std::cout << "  Tx Packets/Bytes:   " << stats[1].txPackets << " / " << stats[1].txBytes
-                          << std::endl;
-                std::cout << "  Offered Load: "
-                          << stats[1].txBytes * 8.0 /
-                                 (stats[1].timeLastTxPacket.GetSeconds() -
-                                  stats[1].timeFirstTxPacket.GetSeconds()) /
-                                 1000000
-                          << " Mbps" << std::endl;
-                std::cout << "  Rx Packets/Bytes:   " << stats[1].rxPackets << " / " << stats[1].rxBytes
-                          << std::endl;
-                uint32_t packetsDroppedByQueueDisc = 0;
-                uint64_t bytesDroppedByQueueDisc = 0;
-                if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE_DISC)
-                {
-                    packetsDroppedByQueueDisc = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-                    bytesDroppedByQueueDisc = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-                }
-                std::cout << "  Packets/Bytes Dropped by Queue Disc:   " << packetsDroppedByQueueDisc << " / "
-                          << bytesDroppedByQueueDisc << std::endl;
-                uint32_t packetsDroppedByNetDevice = 0;
-                uint64_t bytesDroppedByNetDevice = 0;
-                if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE)
-                {
-                    packetsDroppedByNetDevice = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE];
-                    bytesDroppedByNetDevice = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE];
-                }
-                std::cout << "  Packets/Bytes Dropped by NetDevice:   " << packetsDroppedByNetDevice << " / "
-                          << bytesDroppedByNetDevice << std::endl;
-                std::cout << "  Throughput: "
-                          << stats[1].rxBytes * 8.0 /
-                                 (stats[1].timeLastRxPacket.GetSeconds() -
-                                  stats[1].timeFirstRxPacket.GetSeconds()) /
-                                 1000000
-                          << " Mbps" << std::endl;
-                std::cout << "  Mean delay:   " << stats[1].delaySum.GetSeconds() / stats[1].rxPackets
-                          << std::endl;
-                std::cout << "  Mean jitter:   " << stats[1].jitterSum.GetSeconds() / (stats[1].rxPackets - 1)
-                          << std::endl;
-                auto dscpVec = classifier->GetDscpCounts(1);
-                for (auto p : dscpVec)
-                {
-                    std::cout << "  DSCP value:   0x" << std::hex << static_cast<uint32_t>(p.first) << std::dec
-                              << "  count:   " << p.second << std::endl;
-                }
-            
-                TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
-                Ptr<Socket> recvSink = Socket::CreateSocket(c.Get(0), tid);
-                InetSocketAddress local = InetSocketAddress(Ipv4Address::GetAny(), 80);
-                recvSink->Bind(local);
-                recvSink->SetRecvCallback(MakeCallback(&ReceivePacket));
-            
-                Ptr<Socket> source = Socket::CreateSocket(c.Get(1), tid);
-                InetSocketAddress remote = InetSocketAddress(Ipv4Address("255.255.255.255"), 80);
-                source->SetAllowBroadcast(true);
-                source->Connect(remote);
-            
-                // Tracing
-                wifiPhy.EnablePcap("wifi-simple-adhoc", devices);
-            
-                // Output what we are doing
-                NS_LOG_UNCOND("Testing " << numPackets << " packets sent with receiver rss " << rss);
-            
-                Simulator::ScheduleWithContext(source->GetNode()->GetId(),
-                                               Seconds(1.0),
-                                               &GenerateTraffic,
-                                               source,
-                                               packetSize,
-                                               numPackets,
-                                               interPacketInterval);
-            
-                Simulator::Run();
-                Simulator::Destroy();
-            
-                return 0;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class GreetServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        if (password.length() < 8) {
+            out.println("<h3>Password must be at least 8 characters long.</h3>");
+            return;
+        }
+        
+        if (password.equals(confirmPassword)) {
+            out.println("<h3>Welcome, " + username + "!</h3>");
+            out.println("<p>You have successfully registered.</p>");
+        } else {
+            out.println("<h3>Passwords do not match. Please try again.</h3>");
+        }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.sendRedirect("register.html");
+    }
+}
+
+html:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Registration</title>
+</head>
+<body>
+    <h2>User Registration</h2>
+    <form action="GreetServlet" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" minlength="8" required><br><br>
+
+        <label for="confirmPassword">Confirm Password:</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" minlength="8" required><br><br>
+
+        <input type="submit" value="Register">
+    </form>
+</body>
+</html>
+
+        </pre>
+    </section>
+
+    <section>
+        <h2>Prog2</h2>
+        <pre>
+            import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.Period;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class VoterEligibilityServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String email = request.getParameter("email");
+        String dob = request.getParameter("dob"); // format: YYYY-MM-DD
+
+        LocalDate birthDate = LocalDate.parse(dob);
+        LocalDate currentDate = LocalDate.now();
+        
+        // Calculate age
+        int age = Period.between(birthDate, currentDate).getYears();
+
+        out.println("<h2>Voter Eligibility Check</h2>");
+        out.println("<p>Name: " + firstName + " " + lastName + "</p>");
+        out.println("<p>Email: " + email + "</p>");
+        out.println("<p>Date of Birth: " + dob + "</p>");
+        out.println("<p>Age: " + age + "</p>");
+
+        if (age >= 18) {
+            out.println("<h3>You are eligible to vote!</h3>");
+        } else {
+            out.println("<h3>Sorry, you are not eligible to vote. You must be at least 18 years old.</h3>");
+        }
+    }
+}
+
+html:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voter Eligibility Check</title>
+</head>
+<body>
+    <h2>Voter Eligibility Check</h2>
+    <form action="VoterEligibilityServlet" method="post">
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" required><br><br>
+
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required><br><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="dob">Date of Birth:</label>
+        <input type="date" id="dob" name="dob" required><br><br>
+
+        <input type="submit" value="Check Eligibility">
+    </form>
+</body>
+</html>
+
+        </pre>
+    </section>
+    <section>
+        <h2>Prog2</h2>
+        <pre>
+            import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class CgpaCalculatorServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String usn = request.getParameter("usn");
+        String name = request.getParameter("name");
+        String sgpaValues = request.getParameter("sgpa"); // comma-separated SGPA values
+
+        // Split SGPA values and parse them to calculate CGPA
+        String[] sgpaArray = sgpaValues.split(",");
+        double sum = 0;
+        int count = 0;
+
+        try {
+            for (String sgpa : sgpaArray) {
+                sum += Double.parseDouble(sgpa.trim());
+                count++;
             }
 
-        </code>
-    </pre>
+            double cgpa = sum / count;
 
-    <script src="../js/script.js"></script>
+            // Display the results
+            out.println("<h2>CGPA Calculation Result</h2>");
+            out.println("<p>USN: " + usn + "</p>");
+            out.println("<p>Name: " + name + "</p>");
+            out.println("<p>SGPA values: " + sgpaValues + "</p>");
+            out.println("<h3>Calculated CGPA: " + String.format("%.2f", cgpa) + "</h3>");
+            
+        } catch (NumberFormatException e) {
+            out.println("<h3>Error: Invalid SGPA format. Please enter valid numbers separated by commas.</h3>");
+        }
+    }
+}
+
+
+html:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGPA Calculator</title>
+</head>
+<body>
+    <h2>Calculate Your CGPA</h2>
+    <form action="CgpaCalculatorServlet" method="post">
+        <label for="usn">USN:</label>
+        <input type="text" id="usn" name="usn" required><br><br>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="sgpa">Enter SGPA for each semester (comma separated):</label>
+        <input type="text" id="sgpa" name="sgpa" placeholder="e.g., 8.5, 9.0, 7.8" required><br><br>
+
+        <input type="submit" value="Calculate CGPA">
+    </form>
+</body>
+</html>
+
+        </pre>
+    </section>
 </body>
 </html>
