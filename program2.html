@@ -1,182 +1,270 @@
-<!-- programs/program1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/style.css">
-    <title>Transpose</title>
+    <title>Java Code Examples</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
         pre {
             background-color: #f4f4f4;
+            border: 1px solid #ccc;
             padding: 15px;
-            border-radius: 5px;
             overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <h1>point to point</h1>
-    
-    
+    <h1>Java Code Examples</h1>
+    <h2>Prog3: Movie Database Operations</h2>
     <pre>
-        <code>
-            #include "ns3/core-module.h"
-            #include "ns3/network-module.h"
-            #include "ns3/internet-module.h"
-            #include "ns3/point-to-point-module.h"
-            #include "ns3/applications-module.h"
-            #include "ns3/traffic-control-module.h"
-            #include "ns3/flow-monitor-module.h"
-            #include "ns3/netanim-module.h"
-            
-            // Network topology
-            //
-            //       10.1.1.0       10.1.2.0
-            // n0 -------------- n1..........n2
-            //    UDP - point-to-point
-            //
-            //       10.1.3.0       10.1.4.0
-            // n3 -------------- n1..........n2
-            //   TCP point-to-point
-            
-            using namespace ns3;
-            NS_LOG_COMPONENT_DEFINE ("3-node-Example");
-            
-            int
-            main (int argc, char *argv[])
-            {
-              double simulationTime = 5; //seconds
-              
-              CommandLine cmd;
-              cmd.Parse (argc, argv);
-            
-                NodeContainer nodes;
-                nodes.Create (4);
-               
-                InternetStackHelper stack;
-                stack.Install (nodes);
-               
-                PointToPointHelper p2p1;
-                p2p1.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-                p2p1.SetChannelAttribute ("Delay", StringValue ("1ms"));
-            
-            //Udp Interface
-                Ipv4AddressHelper address;
-                address.SetBase ("10.1.1.0", "255.255.255.0");
-               
-                NetDeviceContainer devices;
-                devices = p2p1.Install (nodes.Get (0), nodes.Get (1));
-                Ipv4InterfaceContainer interfaces = address.Assign (devices);
-               
-                devices = p2p1.Install (nodes.Get (1), nodes.Get (2));
-                address.SetBase ("10.1.2.0", "255.255.255.0");
-                interfaces = address.Assign (devices);
-            
-            
-            //TCP Interface
-                Ipv4AddressHelper address1;
-                address1.SetBase ("10.1.3.0", "255.255.255.0");
-               
-                NetDeviceContainer devices1;
-                devices1 = p2p1.Install (nodes.Get (3), nodes.Get (1));
-                Ipv4InterfaceContainer interfaces1 = address1.Assign (devices1);
-               
-                devices1 = p2p1.Install (nodes.Get (1), nodes.Get (2));
-                address1.SetBase ("10.1.4.0", "255.255.255.0");
-                interfaces1 = address1.Assign (devices1);
-            
-                Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-            
-            //Configuring Udp application on nodes
-              uint32_t payloadSize = 1448;
-              OnOffHelper onoff ("ns3::UdpSocketFactory", Ipv4Address::GetAny ());
-              onoff.SetAttribute ("OnTime",  StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-              onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
-              onoff.SetAttribute ("PacketSize", UintegerValue (payloadSize));
-              onoff.SetAttribute ("DataRate", StringValue ("50Mbps")); //bit/s
-              
-            //UDP Flow n0....n2
-              uint16_t port = 7;
-               //1. Install receiver (for packetsink) on node 2
-              Address localAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
-              PacketSinkHelper packetSinkHelper ("ns3::UdpSocketFactory", localAddress);
-              ApplicationContainer sinkApp = packetSinkHelper.Install (nodes.Get (2));
-              sinkApp.Start (Seconds (0.0));
-              sinkApp.Stop (Seconds (5.0));
-              //2. Install sender app on node 0
-              ApplicationContainer apps;
-              AddressValue remoteAddress (InetSocketAddress (interfaces.GetAddress (1), port));
-              onoff.SetAttribute ("Remote", remoteAddress);
-              apps.Add (onoff.Install (nodes.Get (0)));
-              apps.Start (Seconds (1.0));
-              apps.Stop (Seconds (5.0));
-            
-            //Configuring TCP application on nodes
-              OnOffHelper onoff1 ("ns3::TcpSocketFactory", Ipv4Address::GetAny ());
-              onoff1.SetAttribute ("OnTime",  StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-              onoff1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
-              onoff1.SetAttribute ("PacketSize", UintegerValue (payloadSize));
-              onoff1.SetAttribute ("DataRate", StringValue ("50Mbps")); //bit/s
-            //TCP Flow n3....n1
-              uint16_t port1 = 9;
-               //1. Install receiver (for packetsink) on node 2
-              Address localAddress1 (InetSocketAddress (Ipv4Address::GetAny (), port1));
-              PacketSinkHelper packetSinkHelper1 ("ns3::TcpSocketFactory", localAddress1);
-              ApplicationContainer sinkApp1 = packetSinkHelper1.Install (nodes.Get (2));
-              sinkApp1.Start (Seconds (1.0));
-              sinkApp1.Stop (Seconds (simulationTime + 0.1));
-              //2. Install sender app on node 0
-              ApplicationContainer apps1;
-              AddressValue remoteAddress1 (InetSocketAddress (interfaces1.GetAddress (1), port));
-              onoff1.SetAttribute ("Remote", remoteAddress1);
-              apps1.Add (onoff1.Install (nodes.Get (3)));
-              apps1.Start (Seconds (1.5));
-              apps1.Stop (Seconds (simulationTime + 0.1));
-            
-            //Enable Tracing using flowmonitor
-              FlowMonitorHelper flowmon;
-              Ptr<FlowMonitor> monitor = flowmon.InstallAll();
-            
-            //Set when to stop simulator
-              Simulator::Stop (Seconds (simulationTime + 5));
-            
-            //Add visualization using Netanim
-              AnimationInterface anim ("ex2.xml"); 
-              AnimationInterface::SetConstantPosition(nodes.Get(0), 1.0, 1.0);
-              AnimationInterface::SetConstantPosition(nodes.Get(1), 20.0, 2.0);
-              AnimationInterface::SetConstantPosition(nodes.Get(2), 30.0, 2.0);
-              AnimationInterface::SetConstantPosition(nodes.Get(3), 1.0, 15.0);
-              anim.EnablePacketMetadata (); // Optional
-            
-            
-            
-            //Run the simulator
-              Simulator::Run ();
-            
-             // Print per flow statistics
-              monitor->CheckForLostPackets ();
-              Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowmon.GetClassifier ());
-              std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats ();
-            
-              for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator iter = stats.begin (); iter != stats.end (); ++iter)
-                {
-              Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (iter->first);
-                  NS_LOG_UNCOND("Flow ID: " << iter->first << " Src Addr " << t.sourceAddress << " Dst Addr " << t.destinationAddress);
-                  NS_LOG_UNCOND("Tx Packets = " << iter->second.txPackets);
-                  NS_LOG_UNCOND("Rx Packets = " << iter->second.rxPackets);
-                  NS_LOG_UNCOND("lostPackets Packets = " << iter->second.lostPackets);
-                  NS_LOG_UNCOND("Throughput: " << iter->second.rxBytes * 8.0 / (iter->second.timeLastRxPacket.GetSeconds()-iter->second.timeFirstTxPacket.GetSeconds()) / 1024  << " Kbps");
+package WEEK3;
+import java.sql.*;
+
+public class Prog3 {
+    private static final String URL = "jdbc:mysql://localhost:3306/week3";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String createTableSQL = "CREATE TABLE Movies (" +
+                                    "ID INT PRIMARY KEY, " +
+                                    "Movie_Name VARCHAR(100), " +
+                                    "Genre VARCHAR(50), " +
+                                    "IMDB_Rating DECIMAL(3,1), " +
+                                    "Year INT)";
+            try (PreparedStatement pstmt = conn.prepareStatement(createTableSQL)) {
+                pstmt.executeUpdate();
+                System.out.println("Movies table created.");
+            }
+
+            String insertSQL = "INSERT INTO Movies (ID, Movie_Name, Genre, IMDB_Rating, Year) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+                pstmt.setInt(1, 1);
+                pstmt.setString(2, "Inception");
+                pstmt.setString(3, "Sci-fi");
+                pstmt.setDouble(4, 8.8);
+                pstmt.setInt(5, 2010);
+                pstmt.executeUpdate();
+
+                pstmt.setInt(1, 2);
+                pstmt.setString(2, "The Godfather");
+                pstmt.setString(3, "Crime");
+                pstmt.setDouble(4, 9.2);
+                pstmt.setInt(5, 1972);
+                pstmt.executeUpdate();
+
+                pstmt.setInt(1, 3);
+                pstmt.setString(2, "Pulp Fiction");
+                pstmt.setString(3, "Crime");
+                pstmt.setDouble(4, 8.9);
+                pstmt.setInt(5, 1994);
+                pstmt.executeUpdate();
+
+                pstmt.setInt(1, 10);
+                pstmt.setString(2, "Avengers: Endgame");
+                pstmt.setString(3, "Action");
+                pstmt.setDouble(4, 8.4);
+                pstmt.setInt(5, 2019);
+                pstmt.executeUpdate();
+
+                pstmt.setInt(1, 5);
+                pstmt.setString(2, "The Room");
+                pstmt.setString(3, "Drama");
+                pstmt.setDouble(4, 3.7);
+                pstmt.setInt(5, 2003);
+                pstmt.executeUpdate();
+
+                System.out.println("Inserted initial records into Movies table.");
+            }
+
+            System.out.println("All Movies:");
+            displayAllMovies(conn);
+
+            System.out.println("\nDetails of the 5th Movie:");
+            String queryFifthMovieSQL = "SELECT * FROM Movies LIMIT 4, 1";
+            try (PreparedStatement pstmt = conn.prepareStatement(queryFifthMovieSQL);
+                 ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    displayMovieRow(rs);
+                } else {
+                    System.out.println("No 5th movie found.");
                 }
+            }
+
+            System.out.println("\nInserting a new movie:");
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+                pstmt.setInt(1, 6);
+                pstmt.setString(2, "Interstellar");
+                pstmt.setString(3, "Sci-fi");
+                pstmt.setDouble(4, 8.6);
+                pstmt.setInt(5, 2014);
+                pstmt.executeUpdate();
+                System.out.println("New movie inserted.");
+            }
+            displayAllMovies(conn);
+
+            System.out.println("\nDeleting movies with IMDB Rating less than 5.");
+            String deleteLowRatingSQL = "DELETE FROM Movies WHERE IMDB_Rating < 5";
+            try (PreparedStatement pstmt = conn.prepareStatement(deleteLowRatingSQL)) {
+                int rowsDeleted = pstmt.executeUpdate();
+                System.out.println(rowsDeleted + " movie(s) deleted.");
+            }
+            displayAllMovies(conn);
+
+            System.out.println("\nUpdating Genre of movie with ID 10 to 'Sci-fi'");
+            String updateGenreSQL = "UPDATE Movies SET Genre = 'Sci-fi' WHERE ID = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(updateGenreSQL)) {
+                pstmt.setInt(1, 10);
+                int rowsUpdated = pstmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("Genre updated successfully.");
+                } else {
+                    System.out.println("No movie found with ID 10.");
+                }
+            }
+            displayAllMovies(conn);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void displayAllMovies(Connection conn) throws SQLException {
+        String queryAllMoviesSQL = "SELECT * FROM Movies";
+        try (PreparedStatement pstmt = conn.prepareStatement(queryAllMoviesSQL);
+             ResultSet rs = pstmt.executeQuery()) {
+            System.out.printf("%-5s %-30s %-15s %-12s %-5s%n", "ID", "Movie_Name", "Genre", "IMDB_Rating", "Year");
+            System.out.println("-----------------------------------------------------------------------");
+            while (rs.next()) {
+                displayMovieRow(rs);
+            }
+        }
+    }
+
+    private static void displayMovieRow(ResultSet rs) throws SQLException {
+        int id = rs.getInt("ID");
+        String name = rs.getString("Movie_Name");
+        String genre = rs.getString("Genre");
+        double rating = rs.getDouble("IMDB_Rating");
+        int year = rs.getInt("Year");
+
+        System.out.printf("%-5d %-30s %-15s %-12.1f %-5d%n", id, name, genre, rating, year);
+    }
+}
+    </pre>
+
+    <h2>Prog2: Subject Database Operations</h2>
+    <pre>
+package WEEK3;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Prog2 {
+    private static final String URL = "jdbc:mysql://localhost:3306/week3";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             Scanner scanner = new Scanner(System.in)) {
+
+            String createTableSQL = "CREATE TABLE Subject (" +
+                                    "Code VARCHAR(10) PRIMARY KEY, " +
+                                    "Name VARCHAR(100), " +
+                                    "Department VARCHAR(50), " +
+                                    "Credits INT)";
+            stmt.executeUpdate(createTableSQL);
+            System.out.println("Subject table created.");
+
+
+            String insertSQL = "INSERT INTO Subject (Code, Name, Department, Credits) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            	 pstmt.setString(1, "CSL56");
+              pstmt.setString(2, "Java Programming Lab");
+              pstmt.setString(3, "Computer Science");
+              pstmt.setInt(4, 4);
+              pstmt.executeUpdate();
+             pstmt.setString(1, "CSL57");
+              pstmt.setString(2, "System Programming");
+               pstmt.setString(3, "Computer Science");
+               pstmt.setInt(4, 3);
+              pstmt.executeUpdate();
+              System.out.println("Inserted initial records into Subject table.");
+            }
             
-              Simulator::Destroy ();
-              return 0;
+            System.out.println("All Subjects:");
+            String queryAllSubjects = "SELECT * FROM Subject";
+            try (PreparedStatement pstmt = conn.prepareStatement(queryAllSubjects);
+                    ResultSet rs = pstmt.executeQuery()) {
+                   if (rs.next()) {
+                       displayResultSet(rs);
+                   } else {
+                       System.out.println("No subject found. ");
+                   }
+             }
+
+            System.out.println("\nUpdating 'Java Programming Lab' to 'Advanced Java Programming Lab' for Code 'CSL56'.");
+            String updateSQL = "UPDATE Subject SET Name = 'Advanced Java Programming Lab' WHERE Code = 'CSL56'";
+
+
+            try (PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+                int rowsUpdated = pstmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("Subject name updated successfully.");
+                } else {
+                    System.out.println("No subject found.");
+                }
             }
             
 
-        </code>
-    </pre>
 
-    <script src="../js/script.js"></script>
+            System.out.println("\nDeleting subject 'System Programming' from the table.");
+            String deleteSQL = "DELETE FROM Subject WHERE Name = ?";
+            try (PreparedStatement pstmt1 = conn.prepareStatement(deleteSQL)) {
+                pstmt1.setString(1, "System Programming");
+                int rowsDeleted = pstmt1.executeUpdate();
+                if (rowsDeleted > 0) {
+                    System.out.println("Subject deleted successfully.");
+                }
+            }
+
+            System.out.println("\nUpdated list of Subjects:");
+            ResultSet rs = stmt.executeQuery(queryAllSubjects);
+            displayResultSet(rs);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void displayResultSet(ResultSet rs) throws SQLException {
+        System.out.printf("%-10s %-30s %-20s %-10s%n", 
+                          "Code", "Name", "Department", "Credits");
+        System.out.println("---------------------------------------------------------------");
+
+        while (rs.next()) {
+            String code = rs.getString("Code");
+            String name = rs.getString("Name");
+            String department = rs.getString("Department");
+            int credits = rs.getInt("Credits");
+
+            System.out.printf("%-10s %-30s %-20s %-10d%n", code, name, department, credits);
+        }
+    }
+}
+    </pre>
 </body>
 </html>
