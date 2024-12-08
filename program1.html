@@ -90,6 +90,98 @@ public class StudentDatabaseExample {
         }
     }
 }
+
+
+
+
+
+
+
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
+
+public class EmployeeDatabaseExample {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/mydatabase";
+        String user = "root";
+        String password = "";
+
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS Employee (" +
+            "ID INT PRIMARY KEY," +
+            "FName VARCHAR(50)," +
+            "LName VARCHAR(50)," +
+            "Project VARCHAR(100)," +
+            "Salary DECIMAL(10, 2))";
+
+        String insertDataSQL1 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (1, 'Alice', 'Smith', 'Web Development', 80000)";
+        String insertDataSQL2 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (2, 'Bob', 'Johnson', 'Mobile App', 50000)";
+        String insertDataSQL3 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (3, 'Charlie', 'Williams', 'Web Development', 90000)";
+        String insertDataSQL4 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (4, 'David', 'Brown', 'Cloud Computing', 45000)";
+        String insertDataSQL5 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (5, 'Eve', 'Davis', 'Web Development', 40000)";
+
+        String displayAllEmployeesSQL = "SELECT * FROM Employee";
+        String displayWebDevelopmentEmployeesSQL = "SELECT * FROM Employee WHERE Project = 'Web Development'";
+        String displayHighSalaryInWebDevSQL = "SELECT ID FROM Employee WHERE Project = 'Web Development' AND Salary > 75000";
+        String countLowSalaryEmployeesSQL = "SELECT COUNT(*) FROM Employee WHERE Salary < 50000";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Statement stmt = conn.createStatement()) {
+
+            stmt.executeUpdate(createTableSQL);
+            System.out.println("Employee table created successfully!");
+
+            stmt.executeUpdate(insertDataSQL1);
+            stmt.executeUpdate(insertDataSQL2);
+            stmt.executeUpdate(insertDataSQL3);
+            stmt.executeUpdate(insertDataSQL4);
+            stmt.executeUpdate(insertDataSQL5);
+            System.out.println("Sample data inserted successfully!");
+
+            System.out.println("\ni. Display details of all the employees:");
+            ResultSet rs = stmt.executeQuery(displayAllEmployeesSQL);
+            displayResults(rs);
+
+            System.out.println("\nii. Display details of all the employees in 'Web Development' project:");
+            rs = stmt.executeQuery(displayWebDevelopmentEmployeesSQL);
+            displayResults(rs);
+
+            System.out.println("\niii. Display the IDs of employees in 'Web Development' with salary above 75,000:");
+            rs = stmt.executeQuery(displayHighSalaryInWebDevSQL);
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                System.out.println("ID: " + id);
+            }
+
+            System.out.println("\niv. Total number of employees with salary less than 50,000:");
+            rs = stmt.executeQuery(countLowSalaryEmployeesSQL);
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("Total number of employees: " + count);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void displayResults(ResultSet rs) throws SQLException {
+        System.out.println("ID\tFName\tLtFName\tLName\t\tProject\t\t\tSalary");
+        System.out.println("------------------------------------------------------------
+        ---");
+        while (rs.next()) {
+        int id = rs.getInt("ID");
+        String fName = rs.getString("FName");
+        String lName = rs.getString("LName");
+        String project = rs.getString("Project");
+        double salary = rs.getDouble("Salary");
+        System.out.printf("%d\t%-10s\t%-10s\t%-20s\t%.2f%n", id, fName, lName,
+        project, salary);
+        }
+        }
+        }
         </code>
     </pre>
 </body>
