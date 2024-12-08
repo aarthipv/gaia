@@ -1,42 +1,26 @@
+<!-- programs/database_examples.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java Code Examples</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Database Examples</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }
-        h1, h2, h3 {
-            color: #333;
-        }
         pre {
             background-color: #f4f4f4;
-            border: 1px solid #ddd;
+            padding: 15px;
             border-radius: 5px;
-            padding: 10px;
             overflow-x: auto;
-        }
-        code {
-            font-family: Consolas, "Courier New", monospace;
-            color: #c7254e;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Java Code Examples</h1>
-        <p>This page contains Java programs demonstrating database operations for students, employees, and cars.</p>
+    <h1>Database Examples</h1>
 
-        <h2>1. Student Database Example</h2>
-        <pre><code>
+    <h2>1. Student Database Example</h2>
+    <pre>
+        <code>
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -48,30 +32,63 @@ public class StudentDatabaseExample {
         String url = "jdbc:mysql://localhost:3306/mydatabase";
         String user = "root";
         String password = "";
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS Student (USN VARCHAR(10) PRIMARY KEY, Name VARCHAR(100), Semester INT, CGPA DECIMAL(3, 2))";
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS Student (" +
+                                "USN VARCHAR(10) PRIMARY KEY," +
+                                "Name VARCHAR(100)," +
+                                "Semester INT," +
+                                "CGPA DECIMAL(3, 2))";
         String insertDataSQL1 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS001', 'Alice', 5, 8.5)";
         String insertDataSQL2 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS002', 'Bob', 4, 7.5)";
         String insertDataSQL3 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS003', 'Charlie', 5, 9.0)";
+        String insertDataSQL4 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS004', 'David', 6, 6.8)";
+        String insertDataSQL5 = "INSERT INTO Student (USN, Name, Semester, CGPA) VALUES ('1RV20CS005', 'Eve', 5, 7.9)";
+        String displayAllStudentsSQL = "SELECT * FROM Student";
+        String display5thSemesterStudentsSQL = "SELECT * FROM Student WHERE Semester = 5";
+        String display5thSemesterAbove8SQL = "SELECT * FROM Student WHERE Semester = 5 AND CGPA > 8.0";
+        String countAbove8SQL = "SELECT COUNT(*) FROM Student WHERE CGPA > 8.0";
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(createTableSQL);
+            System.out.println("Student table created successfully!");
             stmt.executeUpdate(insertDataSQL1);
             stmt.executeUpdate(insertDataSQL2);
             stmt.executeUpdate(insertDataSQL3);
-            ResultSet rs = stmt.executeQuery("SELECT * FROM Student");
-            while (rs.next()) {
-                System.out.printf("USN: %s, Name: %s, Semester: %d, CGPA: %.2f%n",
-                        rs.getString("USN"), rs.getString("Name"), rs.getInt("Semester"), rs.getDouble("CGPA"));
+            stmt.executeUpdate(insertDataSQL4);
+            stmt.executeUpdate(insertDataSQL5);
+            System.out.println("Sample data inserted successfully!");
+            ResultSet rs = stmt.executeQuery(displayAllStudentsSQL);
+            displayResults(rs);
+            rs = stmt.executeQuery(display5thSemesterStudentsSQL);
+            displayResults(rs);
+            rs = stmt.executeQuery(display5thSemesterAbove8SQL);
+            displayResults(rs);
+            rs = stmt.executeQuery(countAbove8SQL);
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("Total number of students with CGPA above 8.0: " + count);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-}
-        </code></pre>
 
-        <h2>2. Employee Database Example</h2>
-        <pre><code>
+    private static void displayResults(ResultSet rs) throws SQLException {
+        System.out.println("USN\t\tName\t\tSemester\tCGPA");
+        while (rs.next()) {
+            String usn = rs.getString("USN");
+            String name = rs.getString("Name");
+            int semester = rs.getInt("Semester");
+            double cgpa = rs.getDouble("CGPA");
+            System.out.printf("%s\t%-15s\t%d\t\t%.2f%n", usn, name, semester, cgpa);
+        }
+    }
+}
+        </code>
+    </pre>
+
+    <h2>2. Employee Database Example</h2>
+    <pre>
+        <code>
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -83,29 +100,68 @@ public class EmployeeDatabaseExample {
         String url = "jdbc:mysql://localhost:3306/mydatabase";
         String user = "root";
         String password = "";
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS Employee (ID INT PRIMARY KEY, FName VARCHAR(50), LName VARCHAR(50), Project VARCHAR(100), Salary DECIMAL(10, 2))";
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS Employee (" +
+                                "ID INT PRIMARY KEY," +
+                                "FName VARCHAR(50)," +
+                                "LName VARCHAR(50)," +
+                                "Project VARCHAR(100)," +
+                                "Salary DECIMAL(10, 2))";
         String insertDataSQL1 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (1, 'Alice', 'Smith', 'Web Development', 80000)";
         String insertDataSQL2 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (2, 'Bob', 'Johnson', 'Mobile App', 50000)";
+        String insertDataSQL3 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (3, 'Charlie', 'Williams', 'Web Development', 90000)";
+        String insertDataSQL4 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (4, 'David', 'Brown', 'Cloud Computing', 45000)";
+        String insertDataSQL5 = "INSERT INTO Employee (ID, FName, LName, Project, Salary) VALUES (5, 'Eve', 'Davis', 'Web Development', 40000)";
+        String displayAllEmployeesSQL = "SELECT * FROM Employee";
+        String displayWebDevelopmentEmployeesSQL = "SELECT * FROM Employee WHERE Project = 'Web Development'";
+        String displayHighSalaryInWebDevSQL = "SELECT ID FROM Employee WHERE Project = 'Web Development' AND Salary > 75000";
+        String countLowSalaryEmployeesSQL = "SELECT COUNT(*) FROM Employee WHERE Salary < 50000";
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(createTableSQL);
+            System.out.println("Employee table created successfully!");
             stmt.executeUpdate(insertDataSQL1);
             stmt.executeUpdate(insertDataSQL2);
-            ResultSet rs = stmt.executeQuery("SELECT * FROM Employee");
+            stmt.executeUpdate(insertDataSQL3);
+            stmt.executeUpdate(insertDataSQL4);
+            stmt.executeUpdate(insertDataSQL5);
+            System.out.println("Sample data inserted successfully!");
+            ResultSet rs = stmt.executeQuery(displayAllEmployeesSQL);
+            displayResults(rs);
+            rs = stmt.executeQuery(displayWebDevelopmentEmployeesSQL);
+            displayResults(rs);
+            rs = stmt.executeQuery(displayHighSalaryInWebDevSQL);
             while (rs.next()) {
-                System.out.printf("ID: %d, Name: %s %s, Project: %s, Salary: %.2f%n",
-                        rs.getInt("ID"), rs.getString("FName"), rs.getString("LName"),
-                        rs.getString("Project"), rs.getDouble("Salary"));
+                int id = rs.getInt("ID");
+                System.out.println("ID: " + id);
+            }
+            rs = stmt.executeQuery(countLowSalaryEmployeesSQL);
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println("Total number of employees with salary less than 50,000: " + count);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-}
-        </code></pre>
 
-        <h2>3. Car Database Example</h2>
-        <pre><code>
+    private static void displayResults(ResultSet rs) throws SQLException {
+        System.out.println("ID\tFName\tLName\t\tProject\t\t\tSalary");
+        while (rs.next()) {
+            int id = rs.getInt("ID");
+            String fName = rs.getString("FName");
+            String lName = rs.getString("LName");
+            String project = rs.getString("Project");
+            double salary = rs.getDouble("Salary");
+            System.out.printf("%d\t%-10s\t%-10s\t%-20s\t%.2f%n", id, fName, lName, project, salary);
+        }
+    }
+}
+        </code>
+    </pre>
+
+    <h2>3. Car Database Example</h2>
+    <pre>
+        <code>
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -117,28 +173,55 @@ public class CarDatabaseExample {
         String url = "jdbc:mysql://localhost:3306/mydatabase";
         String user = "root";
         String password = "";
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS Car (CarID INT PRIMARY KEY, Make VARCHAR(50), Model VARCHAR(50), Year INT, Price DECIMAL(10, 2))";
-        String insertDataSQL1 = "INSERT INTO Car (CarID, Make, Model, Year, Price) VALUES (1, 'Toyota', 'Camry', 2020, 25000)";
-        String insertDataSQL2 = "INSERT INTO Car (CarID, Make, Model, Year, Price) VALUES (2, 'Honda', 'Civic', 2019, 22000)";
-        String insertDataSQL3 = "INSERT INTO Car (CarID, Make, Model, Year, Price) VALUES (3, 'Tesla', 'Model 3', 2021, 35000)";
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS Car (" +
+                                "Model VARCHAR(50)," +
+                                "Company VARCHAR(50)," +
+                                "Price DECIMAL(10, 2)," +
+                                "Year INT," +
+                                "PRIMARY KEY (Model, Year))";
+        String insertDataSQL1 = "INSERT INTO Car (Model, Company, Price, Year) VALUES ('ABC', 'Toyota', 150000, 2010)";
+        String insertDataSQL2 = "INSERT INTO Car (Model, Company, Price, Year) VALUES ('XYZ', 'Honda', 200000, 2018)";
+        String insertNewCarSQL = "INSERT INTO Car (Model, Company, Price, Year) VALUES ('DEF', 'Tesla', 300000, 2021)";
+        String deleteCarSQL = "DELETE FROM Car WHERE Model = 'ABC' AND Year = 2010";
+        String updatePriceSQL = "UPDATE Car SET Price = 125000 WHERE Price = 150000";
+        String displayAllCarsSQL = "SELECT * FROM Car";
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(createTableSQL);
+            System.out.println("Car table created successfully!");
             stmt.executeUpdate(insertDataSQL1);
             stmt.executeUpdate(insertDataSQL2);
-            stmt.executeUpdate(insertDataSQL3);
-            ResultSet rs = stmt.executeQuery("SELECT * FROM Car");
-            while (rs.next()) {
-                System.out.printf("CarID: %d, Make: %s, Model: %s, Year: %d, Price: %.2f%n",
-                        rs.getInt("CarID"), rs.getString("Make"), rs.getString("Model"),
-                        rs.getInt("Year"), rs.getDouble("Price"));
-            }
+            System.out.println("Sample data inserted successfully!");
+            ResultSet rs = stmt.executeQuery(displayAllCarsSQL);
+            displayResults(rs);
+            stmt.executeUpdate(insertNewCarSQL);
+            rs = stmt.executeQuery(displayAllCarsSQL);
+            displayResults(rs);
+            stmt.executeUpdate(deleteCarSQL);
+            rs = stmt.executeQuery(displayAllCarsSQL);
+            displayResults(rs);
+            stmt.executeUpdate(updatePriceSQL);
+            rs = stmt.executeQuery(displayAllCarsSQL);
+            displayResults(rs);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+    private static void displayResults(ResultSet rs) throws SQLException {
+        System.out.println("Model\t\tCompany\t\tPrice\t\tYear");
+        while (rs.next()) {
+            String model = rs.getString("Model");
+            String company = rs.getString("Company");
+            double price = rs.getDouble("Price");
+            int year = rs.getInt("Year");
+            System.out.printf("%-10s\t%-10s\t%.2f\t\t%d%n", model, company, price, year);
+        }
+    }
 }
-        </code></pre>
-    </div>
+        </code>
+    </pre>
+
+    <script src="../js/script.js"></script>
 </body>
 </html>
