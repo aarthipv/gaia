@@ -1,292 +1,244 @@
-<!-- programs/program1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/style.css">
-    <title>Transpose</title>
+    <title>Prog1 and Prog2 - SQL Operations</title>
     <style>
-        pre {
+        body {
+            font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            padding: 15px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        pre {
+            background-color: #2e2e2e;
+            color: #fff;
+            padding: 20px;
             border-radius: 5px;
-            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <h1>Extended service set</h1>
-    
-    
-    <pre>
-        <code>
-            /*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+    <h1>Java Code for SQL Operations</h1>
 
-#include "ns3/applications-module.h"
-#include "ns3/core-module.h"
-#include "ns3/csma-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/mobility-module.h"
-#include "ns3/network-module.h"
-#include "ns3/point-to-point-module.h"
-#include "ns3/ssid.h"
-#include "ns3/yans-wifi-helper.h"
-#include "ns3/flow-monitor-module.h"
-#include "ns3/traffic-control-module.h"
-// Default Network Topology
-//
-//   Wifi 10.1.3.0
-//                 AP
-//  *    *    *    *
-//  |    |    |    |    10.1.1.0
-// n5   n6   n7   n0 -------------- n1   n2   n3   n4
-//                   point-to-point  |    |    |    |
-//                                   ================
-//                                     LAN 10.1.2.0
+    <section>
+        <h2>Prog1</h2>
+        <pre>
+package week4;
+import java.sql.*;
 
-using namespace ns3;
+public class Prog1 {
+    private static final String URL = "jdbc:mysql://localhost:3306/week4"; 
+    private static final String USER = "root"; 
+    private static final String PASSWORD = ""; 
 
-NS_LOG_COMPONENT_DEFINE("ThirdScriptExample");
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS Customer (" +
+                                    "ID INT PRIMARY KEY, " +
+                                    "Name VARCHAR(100), " +
+                                    "Type_of_Customer VARCHAR(50), " +
+                                    "Amount_Spent DECIMAL(10,2))";
+            try (PreparedStatement pstmt = conn.prepareStatement(createTableSQL)) {
+                pstmt.executeUpdate();
+                System.out.println("Customer table created.");
+            }
 
-int
-main(int argc, char* argv[])
-{	double simulationTime = 10; // seconds
-    bool verbose = true;
-    uint32_t nCsma = 3;
-    uint32_t nWifi = 3;
-    bool tracing = false;
+            String insertSQL = "INSERT INTO Customer (ID, Name, Type_of_Customer, Amount_Spent) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+                pstmt.setInt(1, 1);
+                pstmt.setString(2, "Alice");
+                pstmt.setString(3, "Regular");
+                pstmt.setDouble(4, 2000.0);
+                pstmt.executeUpdate();
 
-    CommandLine cmd(_FILE_);
-    cmd.AddValue("nCsma", "Number of \"extra\" CSMA nodes/devices", nCsma);
-    cmd.AddValue("nWifi", "Number of wifi STA devices", nWifi);
-    cmd.AddValue("verbose", "Tell echo applications to log if true", verbose);
-    cmd.AddValue("tracing", "Enable pcap tracing", tracing);
+                pstmt.setInt(1, 2);
+                pstmt.setString(2, "John");
+                pstmt.setString(3, "Regular");
+                pstmt.setDouble(4, 4000.0);
+                pstmt.executeUpdate();
 
-    cmd.Parse(argc, argv);
+                pstmt.setInt(1, 3);
+                pstmt.setString(2, "Bob");
+                pstmt.setString(3, "Premium");
+                pstmt.setDouble(4, 3000.0);
+                pstmt.executeUpdate();
 
-    // The underlying restriction of 18 is due to the grid position
-    // allocator's configuration; the grid layout will exceed the
-    // bounding box if more than 18 nodes are provided.
-    if (nWifi > 18)
-    {
-        std::cout << "nWifi should be 18 or less; otherwise grid layout exceeds the bounding box"
-                  << std::endl;
-        return 1;
+                pstmt.setInt(1, 4);
+                pstmt.setString(2, "Catherine");
+                pstmt.setString(3, "Regular");
+                pstmt.setDouble(4, 3500.0);
+                pstmt.executeUpdate();
+
+                System.out.println("Inserted initial records into Customer table.");
+            }
+
+            System.out.println("\nAll Customers:");
+            String querySQL = "SELECT * FROM Customer";
+            try (PreparedStatement pstmt = conn.prepareStatement(querySQL);
+                 ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    System.out.printf("ID: %d, Name: %s, Type: %s, Amount Spent: %.2f%n",
+                            rs.getInt("ID"), rs.getString("Name"),
+                            rs.getString("Type_of_Customer"), rs.getDouble("Amount_Spent"));
+                }
+            }
+            System.out.println("\nDetails of the Database: ");
+            DatabaseMetaData dm = conn.getMetaData();
+            System.out.println("Driver Name: " + dm.getDriverName());
+            System.out.println("Driver Version: " + dm.getDriverVersion());
+            System.out.println("Database Product Name: " + dm.getDatabaseProductName());
+            System.out.println("Database Product Version: " + dm.getDatabaseProductVersion());
+            
+            System.out.println("\nDetails of the ResultSet: ");
+
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(querySQL)) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int columnCount = rsmd.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.println("Column Name: " + rsmd.getColumnName(i));
+                    System.out.println("Column Type: " + rsmd.getColumnTypeName(i));
+                    System.out.println("------------");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
-
-    if (verbose)
-    {
-        LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
-        LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
-    }
-
-    NodeContainer p2pNodes;
-    p2pNodes.Create(2);
-
-    PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
-
-    NetDeviceContainer p2pDevices;
-    p2pDevices = pointToPoint.Install(p2pNodes);
-
-    NodeContainer csmaNodes;
-    csmaNodes.Add(p2pNodes.Get(1));
-    csmaNodes.Create(nCsma);
-
-    CsmaHelper csma;
-    csma.SetChannelAttribute("DataRate", StringValue("100Mbps"));
-    csma.SetChannelAttribute("Delay", TimeValue(NanoSeconds(6560)));
-
-    NetDeviceContainer csmaDevices;
-    csmaDevices = csma.Install(csmaNodes);
-
-    NodeContainer wifiStaNodes;
-    wifiStaNodes.Create(nWifi);
-    NodeContainer wifiApNode = p2pNodes.Get(0);
-
-    YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper phy;
-    phy.SetChannel(channel.Create());
-
-    WifiMacHelper mac;
-    Ssid ssid = Ssid("ns-3-ssid");
-
-    WifiHelper wifi;
-
-    NetDeviceContainer staDevices;
-    mac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid), "ActiveProbing", BooleanValue(false));
-    staDevices = wifi.Install(phy, mac, wifiStaNodes);
-
-    NetDeviceContainer apDevices;
-    mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid));
-    apDevices = wifi.Install(phy, mac, wifiApNode);
-
-    MobilityHelper mobility;
-
-    mobility.SetPositionAllocator("ns3::GridPositionAllocator",
-                                  "MinX",
-                                  DoubleValue(0.0),
-                                  "MinY",
-                                  DoubleValue(0.0),
-                                  "DeltaX",
-                                  DoubleValue(5.0),
-                                  "DeltaY",
-                                  DoubleValue(10.0),
-                                  "GridWidth",
-                                  UintegerValue(3),
-                                  "LayoutType",
-                                  StringValue("RowFirst"));
-
-    mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                              "Bounds",
-                              RectangleValue(Rectangle(-50, 50, -50, 50)));
-    mobility.Install(wifiStaNodes);
-
-    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    mobility.Install(wifiApNode);
-
-    InternetStackHelper stack;
-    stack.Install(csmaNodes);
-    stack.Install(wifiApNode);
-    stack.Install(wifiStaNodes);
-
-    Ipv4AddressHelper address;
-
-    address.SetBase("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer p2pInterfaces;
-    p2pInterfaces = address.Assign(p2pDevices);
-
-    address.SetBase("10.1.2.0", "255.255.255.0");
-    Ipv4InterfaceContainer csmaInterfaces;
-    csmaInterfaces = address.Assign(csmaDevices);
-
-    address.SetBase("10.1.3.0", "255.255.255.0");
-    address.Assign(staDevices);
-    address.Assign(apDevices);
-
-    UdpEchoServerHelper echoServer(9);
-
-    ApplicationContainer serverApps = echoServer.Install(csmaNodes.Get(nCsma));
-    serverApps.Start(Seconds(1.0));
-    serverApps.Stop(Seconds(10.0));
-
-    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-    
-    
-    
-    
-    uint16_t port = 7;
-    Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
-    PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory", localAddress);
-    ApplicationContainer sinkApp = packetSinkHelper.Install(csmaNodes.Get(2));
-
-    sinkApp.Start(Seconds(0.0));
-    sinkApp.Stop(Seconds(simulationTime + 0.1));
-
-    uint32_t payloadSize = 1448;
-    Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(payloadSize));
-
-    OnOffHelper onoff("ns3::UdpSocketFactory", Ipv4Address::GetAny());
-    onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
-    onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    onoff.SetAttribute("PacketSize", UintegerValue(payloadSize));
-    onoff.SetAttribute("DataRate", StringValue("50Mbps")); // bit/s
-    ApplicationContainer apps;
-
-    InetSocketAddress rmt(csmaInterfaces.GetAddress(nCsma), port);
-    rmt.SetTos(0xb8);
-    AddressValue remoteAddress(rmt);
-    onoff.SetAttribute("Remote", remoteAddress);
-    apps.Add(onoff.Install(wifiStaNodes.Get(0)));
-    apps.Start(Seconds(1.0));
-    apps.Stop(Seconds(simulationTime + 0.1));
-
-    FlowMonitorHelper flowmon;
-    Ptr<FlowMonitor> monitor = flowmon.InstallAll();
-
-    Simulator::Stop(Seconds(simulationTime + 5));
-    Simulator::Run();
-
-    Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier>(flowmon.GetClassifier());
-    std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
-    std::cout << std::endl << "*** Flow monitor statistics ***" << std::endl;
-    std::cout << "  Tx Packets/Bytes:   " << stats[1].txPackets << " / " << stats[1].txBytes
-              << std::endl;
-    std::cout << "  Offered Load: "
-              << stats[1].txBytes * 8.0 /
-                     (stats[1].timeLastTxPacket.GetSeconds() -
-                      stats[1].timeFirstTxPacket.GetSeconds()) /
-                     1000000
-              << " Mbps" << std::endl;
-    std::cout << "  Rx Packets/Bytes:   " << stats[1].rxPackets << " / " << stats[1].rxBytes
-              << std::endl;
-    uint32_t packetsDroppedByQueueDisc = 0;
-    uint64_t bytesDroppedByQueueDisc = 0;
-    if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE_DISC)
-    {
-        packetsDroppedByQueueDisc = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-        bytesDroppedByQueueDisc = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE_DISC];
-    }
-    std::cout << "  Packets/Bytes Dropped by Queue Disc:   " << packetsDroppedByQueueDisc << " / "
-              << bytesDroppedByQueueDisc << std::endl;
-    uint32_t packetsDroppedByNetDevice = 0;
-    uint64_t bytesDroppedByNetDevice = 0;
-    if (stats[1].packetsDropped.size() > Ipv4FlowProbe::DROP_QUEUE)
-    {
-        packetsDroppedByNetDevice = stats[1].packetsDropped[Ipv4FlowProbe::DROP_QUEUE];
-        bytesDroppedByNetDevice = stats[1].bytesDropped[Ipv4FlowProbe::DROP_QUEUE];
-    }
-    std::cout << "  Packets/Bytes Dropped by NetDevice:   " << packetsDroppedByNetDevice << " / "
-              << bytesDroppedByNetDevice << std::endl;
-    std::cout << "  Throughput: "
-              << stats[1].rxBytes * 8.0 /
-                     (stats[1].timeLastRxPacket.GetSeconds() -
-                      stats[1].timeFirstRxPacket.GetSeconds()) /
-                     1000000
-              << " Mbps" << std::endl;
-    std::cout << "  Mean delay:   " << stats[1].delaySum.GetSeconds() / stats[1].rxPackets
-              << std::endl;
-    std::cout << "  Mean jitter:   " << stats[1].jitterSum.GetSeconds() / (stats[1].rxPackets - 1)
-              << std::endl;
-    auto dscpVec = classifier->GetDscpCounts(1);
-    for (auto p : dscpVec)
-    {
-        std::cout << "  DSCP value:   0x" << std::hex << static_cast<uint32_t>(p.first) << std::dec
-                  << "  count:   " << p.second << std::endl;
-    }
-    Simulator::Stop(Seconds(10.0));
-
-    if (tracing)
-    {
-        phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
-        pointToPoint.EnablePcapAll("third");
-        phy.EnablePcap("third", apDevices.Get(0));
-        csma.EnablePcap("third", csmaDevices.Get(0), true);
-    }
-
-    Simulator::Run();
-    Simulator::Destroy();
-    return 0;
 }
+        </pre>
+    </section>
 
-        </code>
-    </pre>
+    <section>
+        <h2>Prog2</h2>
+        <pre>
+package week4;
 
-    <script src="../js/script.js"></script>
+import java.sql.*;
+
+public class Prog2 {
+    public static void main(String[] args) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/week4", "root", "");
+            
+            con.setAutoCommit(false);
+            
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS Bank_Account (" +
+                                    "Account_No INT PRIMARY KEY, " +
+                                    "Account_Name VARCHAR(100), " +
+                                    "Type_of_Account VARCHAR(50), " +
+                                    "Balance DECIMAL(10, 2))";
+            stmt = con.createStatement();
+            stmt.executeUpdate(createTableSQL);
+            System.out.println("Bank_Account table created or already exists.");
+
+            String insertSQL = "INSERT INTO Bank_Account (Account_No, Account_Name, Type_of_Account, Balance) VALUES (?, ?, ?, ?)";
+            pstmt = con.prepareStatement(insertSQL);
+
+            pstmt.setInt(1, 101);
+            pstmt.setString(2, "Alice");
+            pstmt.setString(3, "Saving");
+            pstmt.setDouble(4, 5000.00);
+            pstmt.executeUpdate();
+
+            pstmt.setInt(1, 102);
+            pstmt.setString(2, "Bob");
+            pstmt.setString(3, "Current");
+            pstmt.setDouble(4, 3000.00);
+            pstmt.executeUpdate();
+
+            pstmt.setInt(1, 103);
+            pstmt.setString(2, "Charlie");
+            pstmt.setString(3, "Saving");
+            pstmt.setDouble(4, 7000.00);
+            pstmt.executeUpdate();
+            
+            con.commit();
+            System.out.println("Inserted records successfully.");
+
+            System.out.println("\nDetails of all Bank Accounts:");
+            String selectSQL = "SELECT * FROM Bank_Account";
+            rs = stmt.executeQuery(selectSQL);
+            while (rs.next()) {
+                System.out.println("Account No: " + rs.getInt("Account_No") +
+                                   ", Name: " + rs.getString("Account_Name") +
+                                   ", Type: " + rs.getString("Type_of_Account") +
+                                   ", Balance: " + rs.getDouble("Balance"));
+            }
+
+            System.out.println("\nDemonstrating Rollback and Commit:");
+            con.setAutoCommit(false); 
+            pstmt.setInt(1, 104);
+            pstmt.setString(2, "David");
+            pstmt.setString(3, "Saving");
+            pstmt.setDouble(4, 9000.00);
+            pstmt.executeUpdate();
+            System.out.println("Inserted record for David.");
+
+            pstmt.setInt(1, 105);
+            pstmt.setString(2, "Eve");
+            pstmt.setString(3, "Current");
+            pstmt.setDouble(4, -5000.00); 
+            pstmt.executeUpdate();
+            con.commit();  
+            
+            con.rollback();
+            System.out.println("Rollback executed - Eve's record is not inserted.");
+
+            System.out.println("\nDemonstrating SavePoint functionality:");
+            con.setAutoCommit(false); 
+            Savepoint savepoint = con.setSavepoint("Savepoint1"); 
+
+            pstmt.setInt(1, 106);
+            pstmt.setString(2, "Frank");
+            pstmt.setString(3, "Current");
+            pstmt.setDouble(4, 1000.00);
+            pstmt.executeUpdate();
+            System.out.println("Inserted record for Frank.");
+
+            con.rollback(savepoint); 
+            System.out.println("Rolled back to savepoint - Frank's record is not inserted.");
+
+            con.commit();
+            System.out.println("Committed changes.");
+
+        } catch (SQLException | ClassNotFoundException e) {
+            System.out.println("Transaction Failed: " + e.getMessage());
+            try {
+                if (con != null) {
+                    con.rollback(); 
+                    System.out.println("Rollback executed due to exception.");
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+
+            try {
+                if (stmt != null) stmt.close();
+                if (pstmt != null) pstmt.close();
+                if (con != null) con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+        </pre>
+    </section>
 </body>
 </html>
