@@ -67,6 +67,11 @@ public class GreetServlet extends HttpServlet {
     }
 }
 
+
+
+
+
+
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
@@ -124,6 +129,131 @@ public class GreetServlet extends HttpServlet {
     <section>
         <h2>Prog3</h2>
         <pre>
+            import java.io.IOException;
+            import java.io.PrintWriter;
+            import java.time.LocalDate;
+            import java.time.Period;
+            import javax.servlet.ServletException;
+            import javax.servlet.annotation.WebServlet;
+            import javax.servlet.http.HttpServlet;
+            import javax.servlet.http.HttpServletRequest;
+            import javax.servlet.http.HttpServletResponse;
+            
+            public class VoterEligibilityServlet extends HttpServlet {
+            
+                protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+                        throws ServletException, IOException {
+                    response.setContentType("text/html");
+                    PrintWriter out = response.getWriter();
+            
+                    String firstName = request.getParameter("firstName");
+                    String lastName = request.getParameter("lastName");
+                    String email = request.getParameter("email");
+                    String dob = request.getParameter("dob"); // format: YYYY-MM-DD
+            
+                    LocalDate birthDate = LocalDate.parse(dob);
+                    LocalDate currentDate = LocalDate.now();
+                    
+                    // Calculate age
+                    int age = Period.between(birthDate, currentDate).getYears();
+            
+                    out.println("<h2>Voter Eligibility Check</h2>");
+                    out.println("<p>Name: " + firstName + " " + lastName + "</p>");
+                    out.println("<p>Email: " + email + "</p>");
+                    out.println("<p>Date of Birth: " + dob + "</p>");
+                    out.println("<p>Age: " + age + "</p>");
+            
+                    if (age >= 18) {
+                        out.println("<h3>You are eligible to vote!</h3>");
+                    } else {
+                        out.println("<h3>Sorry, you are not eligible to vote. You must be at least 18 years old.</h3>");
+                    }
+                }
+            }
+
+            
+
+
+            <section>
+                <h2>Voter Eligibility</h2>
+                <pre>
+        &lt;!DOCTYPE html&gt;
+        &lt;html&gt;
+        &lt;head&gt;
+            &lt;title&gt;Voter Eligibility Check&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+            &lt;h2&gt;Voter Eligibility Check&lt;/h2&gt;
+            &lt;form action=&quot;VoterEligibilityServlet&quot; method=&quot;post&quot;&gt;
+                &lt;label for=&quot;firstName&quot;&gt;First Name:&lt;/label&gt;
+                &lt;input type=&quot;text&quot; id=&quot;firstName&quot; name=&quot;firstName&quot; required&gt;&lt;br&gt;&lt;br&gt;
+        
+                &lt;label for=&quot;lastName&quot;&gt;Last Name:&lt;/label&gt;
+                &lt;input type=&quot;text&quot; id=&quot;lastName&quot; name=&quot;lastName&quot; required&gt;&lt;br&gt;&lt;br&gt;
+        
+                &lt;label for=&quot;email&quot;&gt;Email:&lt;/label&gt;
+                &lt;input type=&quot;email&quot; id=&quot;email&quot; name=&quot;email&quot; required&gt;&lt;br&gt;&lt;br&gt;
+        
+                &lt;label for=&quot;dob&quot;&gt;Date of Birth:&lt;/label&gt;
+                &lt;input type=&quot;date&quot; id=&quot;dob&quot; name=&quot;dob&quot; required&gt;&lt;br&gt;&lt;br&gt;
+        
+                &lt;input type=&quot;submit&quot; value=&quot;Check Eligibility&quot;&gt;
+            &lt;/form&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+                </pre>
+            </section>
+
+
+            import java.io.IOException;
+            import java.io.PrintWriter;
+            import javax.servlet.ServletException;
+            import javax.servlet.annotation.WebServlet;
+            import javax.servlet.http.HttpServlet;
+            import javax.servlet.http.HttpServletRequest;
+            import javax.servlet.http.HttpServletResponse;
+            
+            public class CgpaCalculatorServlet extends HttpServlet {
+            
+                protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+                        throws ServletException, IOException {
+                    response.setContentType("text/html");
+                    PrintWriter out = response.getWriter();
+            
+                    String usn = request.getParameter("usn");
+                    String name = request.getParameter("name");
+                    String sgpaValues = request.getParameter("sgpa"); // comma-separated SGPA values
+            
+                    // Split SGPA values and parse them to calculate CGPA
+                    String[] sgpaArray = sgpaValues.split(",");
+                    double sum = 0;
+                    int count = 0;
+            
+                    try {
+                        for (String sgpa : sgpaArray) {
+                            sum += Double.parseDouble(sgpa.trim());
+                            count++;
+                        }
+            
+                        double cgpa = sum / count;
+            
+                        // Display the results
+                        out.println("<h2>CGPA Calculation Result</h2>");
+                        out.println("<p>USN: " + usn + "</p>");
+                        out.println("<p>Name: " + name + "</p>");
+                        out.println("<p>SGPA values: " + sgpaValues + "</p>");
+                        out.println("<h3>Calculated CGPA: " + String.format("%.2f", cgpa) + "</h3>");
+                        
+                    } catch (NumberFormatException e) {
+                        out.println("<h3>Error: Invalid SGPA format. Please enter valid numbers separated by commas.</h3>");
+                    }
+                }
+            }
+
+            
+
+
+            
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
