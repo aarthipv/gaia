@@ -29,6 +29,44 @@
     <section>
         <h2>Prog1</h2>
         <pre>
+            import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class GreetServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        if (password.length() < 8) {
+            out.println("<h3>Password must be at least 8 characters long.</h3>");
+            return;
+        }
+        
+        if (password.equals(confirmPassword)) {
+            out.println("<h3>Welcome, " + username + "!</h3>");
+            out.println("<p>You have successfully registered.</p>");
+        } else {
+            out.println("<h3>Passwords do not match. Please try again.</h3>");
+        }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.sendRedirect("register.html");
+    }
+}
+
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
