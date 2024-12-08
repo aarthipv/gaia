@@ -29,7 +29,6 @@
     <section>
         <h2>Prog1</h2>
         <pre>
-            
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -65,11 +64,12 @@ public class GreetServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         response.sendRedirect("register.html");
-    }
+    }
 }
+        </pre>
 
-html:
-
+        <h3>HTML Form for Prog1</h3>
+        <pre>
 <!DOCTYPE html>
 <html>
 <head>
@@ -91,14 +91,13 @@ html:
     </form>
 </body>
 </html>
-
         </pre>
     </section>
 
     <section>
         <h2>Prog2</h2>
         <pre>
-            import java.io.IOException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.Period;
@@ -136,12 +135,13 @@ public class VoterEligibilityServlet extends HttpServlet {
             out.println("<h3>You are eligible to vote!</h3>");
         } else {
             out.println("<h3>Sorry, you are not eligible to vote. You must be at least 18 years old.</h3>");
-        }
-    }
+        }
+    }
 }
+        </pre>
 
-html:
-
+        <h3>HTML Form for Prog2</h3>
+        <pre>
 <!DOCTYPE html>
 <html>
 <head>
@@ -166,13 +166,13 @@ html:
     </form>
 </body>
 </html>
-
         </pre>
     </section>
+
     <section>
-        <h2>Prog2</h2>
+        <h2>Prog3</h2>
         <pre>
-            import java.io.IOException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -213,13 +213,13 @@ public class CgpaCalculatorServlet extends HttpServlet {
             
         } catch (NumberFormatException e) {
             out.println("<h3>Error: Invalid SGPA format. Please enter valid numbers separated by commas.</h3>");
-        }
-    }
+        }
+    }
 }
+        </pre>
 
-
-html:
-
+        <h3>HTML Form for Prog3</h3>
+        <pre>
 <!DOCTYPE html>
 <html>
 <head>
@@ -241,8 +241,8 @@ html:
     </form>
 </body>
 </html>
-
         </pre>
     </section>
+
 </body>
 </html>
